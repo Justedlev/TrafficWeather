@@ -5,18 +5,24 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.traffic.weather.api.ApiConstants;
+import org.traffic.weather.api.dto.DescriptionDTO;
 import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficCoordDTO;
+import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficDeviceDTO;
 import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficWeatherDTO;
 import org.traffic.weather.api.dto.traffic_device_weather_dto.WeatherDTO;
 import org.traffic.weather.domain.dao.TrafficWeatherRepository;
 import org.traffic.weather.domain.entities.TrafficDeviceEntity;
 
 import java.net.URI;
+import java.util.LinkedList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -71,14 +77,35 @@ public class TrafficWeatherTest {
     );
 
     @Test
+    void trafficDevicesTest() {
+        List<TrafficDeviceDTO> devicesDto = new LinkedList<>();
+        List<TrafficDeviceEntity> devicesEntity = new LinkedList<>();
+        devicesDto.add(new TrafficDeviceDTO(
+                "1",
+                1L,
+                1.,
+                1.,
+                1,
+                false,
+                false
+        ));
+        devicesEntity.add(entity);
+        Mockito.when(repo.findAll()).thenReturn(devicesEntity);
+        ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
+        Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
+        assertEquals(localHostRestTemplate.exchange(host + port, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody(), devicesDto);
+        assertEquals(localHostRestTemplate.exchange(host + port + ApiConstants.REPAIRED_ENDPOINT, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody(), devicesDto);
+    }
+
+    @Test
     void trafficWeatherTest() {
         Mockito.when(repo.findById("1")).thenReturn(entity);
         ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
         Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
         assertEquals(localHostRestTemplate.getForEntity(host + port + ApiConstants.REPAIRED_ENDPOINT + "?trafficId=1",
                 TrafficWeatherDTO.class).getBody(), dto);
-        assertNull(localHostRestTemplate.getForEntity(host + port + ApiConstants.REPAIRED_ENDPOINT + "?trafficId=0",
-                TrafficWeatherDTO.class).getBody());
     }
 
 }
