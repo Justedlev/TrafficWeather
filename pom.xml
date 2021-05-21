@@ -12,9 +12,9 @@
     </parent>
 
     <groupId>org.traffic.weather</groupId>
-    <artifactId>TrafficWeather</artifactId>
+    <artifactId>traffic-weather</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>TrafficWeather</name>
+    <name>traffic-weather</name>
     <description>Traffic Light Weather</description>
 
     <properties>
@@ -27,12 +27,6 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20210307</version>
         </dependency>
 
         <dependency>
