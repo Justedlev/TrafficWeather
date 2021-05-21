@@ -12,16 +12,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.traffic.weather.api.ApiConstants;
-import org.traffic.weather.api.dto.DescriptionDTO;
-import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficCoordDTO;
-import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficDeviceDTO;
-import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficWeatherDTO;
-import org.traffic.weather.api.dto.traffic_device_weather_dto.WeatherDTO;
+import org.traffic.weather.api.dto.traffic_device_weather_dto.*;
+import org.traffic.weather.api.dto.weather_dto.CloudsDTO;
+import org.traffic.weather.api.dto.weather_dto.MainWeatherDTO;
+import org.traffic.weather.api.dto.weather_dto.WeatherDTO;
+import org.traffic.weather.api.dto.weather_dto.WindDTO;
 import org.traffic.weather.domain.dao.TrafficWeatherRepository;
 import org.traffic.weather.domain.entities.TrafficDeviceEntity;
 
 import java.net.URI;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,37 +50,67 @@ public class TrafficWeatherTest {
             .queryParam("units","metric")
             .build().toUri();
 
-    String responseData = "{\"main\":{" +
-            "\"temp\":1.0," +
-            "\"feels_like\":1.0," +
-            "\"temp_min\":1.0," +
-            "\"temp_max\":1.0," +
-            "\"pressure\":1," +
-            "\"humidity\":1}," +
-            "\"visibility\":1," +
-            "\"wind\":{\"speed\":1.0},\"name\":\"city\"}";
-
-    TrafficDeviceEntity entity = new TrafficDeviceEntity(
-            1L,
-            "1",
-            1L,
-            1.,
-            1.,
+    WeatherDTO weatherDTO = new WeatherDTO(
+            Collections.singletonList(new CloudsDTO("1", "1")),
+            new MainWeatherDTO(
+                    1.,
+                    1.,
+                    1.,
+                    1.,
+                    1,
+                    1
+            ),
             1,
-            false,
-            false
+            new WindDTO(1., 1),
+            "1"
     );
-    TrafficWeatherDTO dto = new TrafficWeatherDTO(
-            "1",
-            new TrafficCoordDTO(1., 1., 1),
-            new WeatherDTO("city", 1., 1., 1., 1., 1, 1, 1, 1.)
-    );
+
+    List<TrafficDeviceDTO> trafficDeviceDtos = getTrafficDeviceEntitys();
+    List<TrafficDeviceEntity> trafficDeviceEntities = getTrafficWeatherDTOs();
+    TrafficWeatherDTO trafficWeatherDTO = getTrafficWeatherDTO();
+
+    String responseData = "{\"weather\":[{\"main\":\"1\",\"description\":\"1\"}]," +
+            "\"main\":{\"temp\":1.0,\"feels_like\":1.0,\"temp_min\":1.0,\"temp_max\":1.0,\"pressure\":1,\"humidity\":1}," +
+            "\"visibility\":1,\"wind\":{\"speed\":1.0,\"deg\":1},\"name\":\"1\"}";
 
     @Test
-    void trafficDevicesTest() {
-        List<TrafficDeviceDTO> devicesDto = new LinkedList<>();
-        List<TrafficDeviceEntity> devicesEntity = new LinkedList<>();
-        devicesDto.add(new TrafficDeviceDTO(
+    void trafficDevicesFoundTest() {
+        Mockito.when(repo.findAll()).thenReturn(trafficDeviceEntities);
+        ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
+        Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
+        List<TrafficDeviceDTO> data = localHostRestTemplate.exchange(host + port, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody();
+        assertEquals(data, trafficDeviceDtos);
+        data = localHostRestTemplate.exchange(host + port + ApiConstants.REPAIRED_ENDPOINT, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody();
+        assertEquals(data, trafficDeviceDtos);
+    }
+
+    @Test
+    void trafficWeatherFoundTest() {
+        Mockito.when(repo.findById("1")).thenReturn(trafficDeviceEntities.get(0));
+        ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
+        Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
+        TrafficWeatherDTO data = localHostRestTemplate.getForEntity(host + port + ApiConstants.REPAIRED_ENDPOINT + "?trafficId=1",
+                TrafficWeatherDTO.class).getBody();
+        assertEquals(data, trafficWeatherDTO);
+    }
+
+    private TrafficWeatherDTO getTrafficWeatherDTO() {
+        TrafficDeviceDTO trafficDeviceDTO = new TrafficDeviceDTO(
+                "1",
+                1L,
+                1.,
+                1.,
+                1,
+                false,
+                false
+        );
+        return new TrafficWeatherDTO(trafficDeviceDTO, weatherDTO);
+    }
+
+    private List<TrafficDeviceDTO> getTrafficDeviceEntitys() {
+        return Collections.singletonList(new TrafficDeviceDTO(
                 "1",
                 1L,
                 1.,
@@ -89,23 +119,19 @@ public class TrafficWeatherTest {
                 false,
                 false
         ));
-        devicesEntity.add(entity);
-        Mockito.when(repo.findAll()).thenReturn(devicesEntity);
-        ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
-        Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
-        assertEquals(localHostRestTemplate.exchange(host + port, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody(), devicesDto);
-        assertEquals(localHostRestTemplate.exchange(host + port + ApiConstants.REPAIRED_ENDPOINT, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody(), devicesDto);
     }
 
-    @Test
-    void trafficWeatherTest() {
-        Mockito.when(repo.findById("1")).thenReturn(entity);
-        ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
-        Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
-        assertEquals(localHostRestTemplate.getForEntity(host + port + ApiConstants.REPAIRED_ENDPOINT + "?trafficId=1",
-                TrafficWeatherDTO.class).getBody(), dto);
+    private List<TrafficDeviceEntity> getTrafficWeatherDTOs() {
+        return Collections.singletonList(new TrafficDeviceEntity(
+                1L,
+                "1",
+                1L,
+                1.,
+                1.,
+                1,
+                false,
+                false
+        ));
     }
 
 }
