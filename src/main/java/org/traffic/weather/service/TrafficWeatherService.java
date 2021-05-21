@@ -1,7 +1,8 @@
 package org.traffic.weather.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -10,10 +11,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.traffic.weather.api.ApiConstants;
 import org.traffic.weather.api.CodeWithReturnedData;
 import org.traffic.weather.api.Codes;
-import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficCoordDTO;
 import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficDeviceDTO;
 import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficWeatherDTO;
-import org.traffic.weather.api.dto.traffic_device_weather_dto.WeatherDTO;
+import org.traffic.weather.api.dto.weather_dto.WeatherDTO;
 import org.traffic.weather.domain.dao.TrafficWeatherRepository;
 import org.traffic.weather.domain.entities.TrafficDeviceEntity;
 import org.traffic.weather.service.interfaces.ITrafficWeather;
@@ -32,12 +32,15 @@ public class TrafficWeatherService implements ITrafficWeather {
     @Autowired
     RestTemplate restTemplate;
 
+    @Autowired
+    ObjectMapper mapper;
+
     @Override
     public List<TrafficDeviceDTO> getAllTrafficDevices() {
         List<TrafficDeviceDTO> devices = repository.findAll().stream()
                 .map(this::convertTrafficDeviceEntityToTrafficDeviceDTO)
                 .collect(Collectors.toList());
-        log.debug("getting all data from db, data = {}" , devices);
+        log.debug("getting all data from db");
         return devices;
     }
 
@@ -52,30 +55,21 @@ public class TrafficWeatherService implements ITrafficWeather {
         return getTrafficWeather(trafficDevice);
     }
 
-    private CodeWithReturnedData<TrafficWeatherDTO> getTrafficWeather(TrafficDeviceEntity trafficDevice) {
-        URI api = getWeatherApiURI(trafficDevice.getDeviceLongitude(), trafficDevice.getDeviceLatitude());
+    private CodeWithReturnedData<TrafficWeatherDTO> getTrafficWeather(TrafficDeviceEntity trafficDeviceEntity) {
+        URI api = getWeatherApiURI(trafficDeviceEntity.getDeviceLongitude(), trafficDeviceEntity.getDeviceLatitude());
         ResponseEntity<String> response = restTemplate.getForEntity(api, String.class);
-        JSONObject weatherData = new JSONObject(response.getBody());
-        log.debug("getting data from weather api = {}, data = {}", api, weatherData);
-        TrafficWeatherDTO dto = getTrafficWeatherDTO(weatherData, trafficDevice);
-        return new CodeWithReturnedData<>(Codes.OK, dto);
-    }
-
-    private TrafficWeatherDTO getTrafficWeatherDTO(JSONObject weatherData, TrafficDeviceEntity trafficDevice) {
-        TrafficCoordDTO coord = new TrafficCoordDTO(trafficDevice.getDeviceLongitude(),
-                trafficDevice.getDeviceLatitude(), trafficDevice.getDeviceHeight());
-        JSONObject main = weatherData.getJSONObject("main");
-        String city = weatherData.getString("name");
-        Double temp = main.getDouble("temp");
-        Double feelsLike = main.getDouble("feels_like");
-        Double tempMin = main.getDouble("temp_min");
-        Double tempMax = main.getDouble("temp_max");
-        Integer pressure = main.getInt("pressure");
-        Integer humidity = main.getInt("humidity");
-        Integer visibility = weatherData.getInt("visibility");
-        Double windSpeed = weatherData.getJSONObject("wind").getDouble("speed");
-        WeatherDTO weather = new WeatherDTO(city, temp, feelsLike, tempMin, tempMax, pressure, humidity, visibility, windSpeed);
-        return new TrafficWeatherDTO(trafficDevice.getId(), coord, weather);
+        log.debug("getting data from weather api = {}, data = {}", api, response.getBody());
+        TrafficDeviceDTO trafficDevice = convertTrafficDeviceEntityToTrafficDeviceDTO(trafficDeviceEntity);
+        WeatherDTO weatherData;
+        try {
+            weatherData = mapper.readValue(response.getBody(), WeatherDTO.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            log.debug("conversion data from weather api '{}' error", api);
+            return new CodeWithReturnedData<>(Codes.OK, new TrafficWeatherDTO(trafficDevice, null));
+        }
+        TrafficWeatherDTO trafficWeatherDTO = new TrafficWeatherDTO(trafficDevice, weatherData);
+        return new CodeWithReturnedData<>(Codes.OK, trafficWeatherDTO);
     }
 
     private URI getWeatherApiURI(double longitude, double latitude) {

@@ -1,6 +1,7 @@
 package org.traffic.weather.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +34,7 @@ public class TrafficWeatherController {
         if(cwrd.getCode() == Codes.TRAFFIC_DEVICE_NOT_FOUND) {
             DescriptionDTO description =
                     new DescriptionDTO(String.format("Traffic device by id '%s' not found!", trafficId));
-            return ResponseEntity.badRequest().body(description);
+            return new ResponseEntity<>(description, HttpStatus.NOT_FOUND);
         }
         return ResponseEntity.ok(cwrd.getReturnedData());
     }

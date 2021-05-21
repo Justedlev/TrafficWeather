@@ -9,6 +9,11 @@ import org.springframework.web.client.RestTemplate;
 public class Components {
 
     @Bean
+    ObjectMapper getMapper() {
+        return new ObjectMapper();
+    }
+
+    @Bean
     RestTemplate getRestTemplateBean() {
         return new RestTemplate();
     }
