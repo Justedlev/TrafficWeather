@@ -19,35 +19,48 @@ SERVICE HOSTNAME: https://localhost:8080
       [
         {
           "id": "String",
-          "lastHeartbeat": "Long",
-          "deviceLongitude": "Double",
-          "deviceLatitude": "Double",
-          "deviceHeight": "Integer",
-          "enabled": "Boolean",
-          "connected": "Boolean"
-        },
-        ...
+          "lastHeartbeat": 1234567890134,
+          "deviceLongitude": -12.345678,
+          "deviceLatitude": 12.345678,
+          "deviceHeight": 123,
+          "enabled": false,
+          "connected": false
+        }
       ]
       ```
     - With trafficId
       ```json
       {
-        "trafficId": "String",
-        "coord": {
-          "longitude": "Double",
-          "latitude": "Double",
-          "deviceHeight": "Integer"
-        }, 
+        "trafficDevice": {
+          "id": "String",
+          "lastHeartbeat": 1234567890134,
+          "deviceLongitude": -12.345678,
+          "deviceLatitude": 12.345678,
+          "deviceHeight": 123,
+          "enabled": false,
+          "connected": false
+        },
         "weather": {
-          "city": "String",
-          "temp": "Double",
-          "feelsLike": "Double",
-          "tempMin": "Double",
-          "tempMax": "Double",
-          "pressure": "Integer",
-          "humidity": "Integer",
-          "visibility": "Integer",
-          "windSpeed": "Double"
+          "weather": [
+            {
+            "main": "String",
+            "description": "String"
+            }
+          ],
+          "main": {
+            "temp": 12.34,
+            "feels_like": 12.34,
+            "temp_min": 12.34,
+            "temp_max": 12.34,
+            "pressure": 1234,
+            "humidity": 12
+          },
+          "visibility": 12345,
+          "wind": {
+            "speed": 1.23,
+            "deg": 123
+          },
+          "name": "String"
         }
       }
       ```
@@ -55,7 +68,7 @@ SERVICE HOSTNAME: https://localhost:8080
 
     ```json
     {
-      "description": "string"
+      "description": "String"
     }
     ```
   - `Status: 404 Not Found`
