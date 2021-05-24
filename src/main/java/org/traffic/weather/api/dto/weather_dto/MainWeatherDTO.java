@@ -1,5 +1,6 @@
 package org.traffic.weather.api.dto.weather_dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
 @NoArgsConstructor
@@ -8,6 +9,7 @@ import lombok.*;
 @Getter
 @ToString
 @EqualsAndHashCode
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MainWeatherDTO {
 
     private Double temp;

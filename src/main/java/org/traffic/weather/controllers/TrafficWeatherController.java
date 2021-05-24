@@ -14,21 +14,16 @@ import org.traffic.weather.api.dto.DescriptionDTO;
 import org.traffic.weather.service.TrafficWeatherService;
 
 @Controller
-@RequestMapping("/")
+@RequestMapping(ApiConstants.MAIN_ENDPOINT)
 public class TrafficWeatherController {
 
     @Autowired
     TrafficWeatherService service;
 
     @GetMapping
-    ResponseEntity<?> main() {
-        return ResponseEntity.ok(service.getAllTrafficDevices());
-    }
-
-    @GetMapping(ApiConstants.REPAIRED_ENDPOINT)
-    ResponseEntity<?> canBeRepaired(@RequestParam(required = false) String trafficId) {
-        if(trafficId == null) {
-            return main();
+    ResponseEntity<?> main(@RequestParam(required = false) String trafficId) {
+        if(trafficId == null || trafficId.isEmpty()) {
+            return ResponseEntity.ok(service.getAllTrafficDevices());
         }
         CodeWithReturnedData<?> cwrd = service.canBeRepaired(trafficId);
         if(cwrd.getCode() == Codes.TRAFFIC_DEVICE_NOT_FOUND) {

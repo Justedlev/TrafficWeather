@@ -61,7 +61,7 @@ public class TrafficWeatherTest {
                     1
             ),
             1,
-            new WindDTO(1., 1),
+            new WindDTO(1., 1, 1.),
             "1"
     );
 
@@ -81,7 +81,7 @@ public class TrafficWeatherTest {
         List<TrafficDeviceDTO> data = localHostRestTemplate.exchange(host + port, HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody();
         assertEquals(data, trafficDeviceDtos);
-        data = localHostRestTemplate.exchange(host + port + ApiConstants.REPAIRED_ENDPOINT, HttpMethod.GET, null,
+        data = localHostRestTemplate.exchange(host + port, HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody();
         assertEquals(data, trafficDeviceDtos);
     }
@@ -91,7 +91,7 @@ public class TrafficWeatherTest {
         Mockito.when(repo.findById("1")).thenReturn(trafficDeviceEntities.get(0));
         ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
         Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
-        TrafficWeatherDTO data = localHostRestTemplate.getForEntity(host + port + ApiConstants.REPAIRED_ENDPOINT + "?trafficId=1",
+        TrafficWeatherDTO data = localHostRestTemplate.getForEntity(host + port + "?trafficId=1",
                 TrafficWeatherDTO.class).getBody();
         assertEquals(data, trafficWeatherDTO);
     }
