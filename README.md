@@ -6,11 +6,11 @@ SERVICE HOSTNAME: https://localhost:8080
 ## ***API***
 
 ### # Get traffic weather information:
-#### -> GET {SERVICE HOSTNAME}/repaired
+#### -> GET {SERVICE HOSTNAME}
 - Headers : ...
 - Query Parameters:
   - Without parameters will return a list of all traffic
-  - With param - `?trafficId={traffic id in string formath}` returns weather data at the traffic light point.
+  - With param - `?trafficId={traffic id in string format}` returns weather data at the traffic light point.
 - Body : -
 - Responses :
   - `Status: 200 OK` | Body :
