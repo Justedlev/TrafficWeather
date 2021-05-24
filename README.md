@@ -58,17 +58,18 @@ SERVICE HOSTNAME: https://localhost:8080
           "visibility": 12345,
           "wind": {
             "speed": 1.23,
-            "deg": 123
+            "deg": 123,
+            "gust": 1.23
           },
           "name": "String"
         }
       }
       ```
-  - `Status: 400 Bad Request` | Body :
+  - `Status: 404 Not Found` | Body :
 
     ```json
     {
       "description": "String"
     }
     ```
-  - `Status: 404 Not Found`
+  - `Status: 400 Bad Request`
