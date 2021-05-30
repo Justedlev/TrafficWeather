@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -23,17 +24,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Qualifier("service1")
 @Slf4j
 public class TrafficWeatherService implements ITrafficWeather {
 
     @Autowired
-    TrafficWeatherRepository repository;
+    private TrafficWeatherRepository repository;
 
     @Autowired
-    RestTemplate restTemplate;
+    private RestTemplate restTemplate;
 
     @Autowired
-    ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @Override
     public List<TrafficDeviceDTO> getAllTrafficDevices() {

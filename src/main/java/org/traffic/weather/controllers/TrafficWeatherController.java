@@ -1,6 +1,7 @@
 package org.traffic.weather.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -11,14 +12,15 @@ import org.traffic.weather.api.ApiConstants;
 import org.traffic.weather.api.CodeWithReturnedData;
 import org.traffic.weather.api.Codes;
 import org.traffic.weather.api.dto.DescriptionDTO;
-import org.traffic.weather.service.TrafficWeatherService;
+import org.traffic.weather.service.interfaces.ITrafficWeather;
 
 @Controller
 @RequestMapping(ApiConstants.MAIN_ENDPOINT)
 public class TrafficWeatherController {
 
     @Autowired
-    TrafficWeatherService service;
+    @Qualifier("service1")
+    ITrafficWeather service;
 
     @GetMapping
     ResponseEntity<?> main(@RequestParam(required = false) String trafficId) {
