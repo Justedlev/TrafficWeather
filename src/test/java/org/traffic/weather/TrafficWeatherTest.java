@@ -30,6 +30,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class TrafficWeatherTest {
 
+    double LAT = 32.023406;
+    double LON = 34.769836;
+    String CITY_NAME = "Holon";
+
     @LocalServerPort
     int port;
 
@@ -45,14 +49,14 @@ public class TrafficWeatherTest {
 
     URI api = UriComponentsBuilder.fromHttpUrl(ApiConstants.WEATHER_API_URL)
             .path(ApiConstants.WEATHER_API_PATH)
-            .queryParam("lat", 1.)
-            .queryParam("lon", 1.)
+            .queryParam("lat", LAT)
+            .queryParam("lon", LON)
             .queryParam("appid", ApiConstants.WEATHER_API_KEY)
             .queryParam("units","metric")
             .build().toUri();
 
     WeatherDTO weatherDTO = new WeatherDTO(
-            Collections.singletonList(new CloudsDTO("1", "1")),
+            Collections.singletonList(new CloudsDTO("Clear", "clear sky")),
             new MainWeatherDTO(
                     1.,
                     1.,
@@ -63,27 +67,24 @@ public class TrafficWeatherTest {
             ),
             1,
             new WindDTO(1., 1, 1.),
-            "1"
+            CITY_NAME
     );
 
-    List<TrafficDeviceDTO> trafficDeviceDtos = getTrafficDeviceEntitys();
-    List<TrafficDeviceEntity> trafficDeviceEntities = getTrafficWeatherDTOs();
+    List<TrafficDeviceDTO> trafficDeviceDtos = getTrafficDeviceDTOs();
+    List<TrafficDeviceEntity> trafficDeviceEntities = getTrafficDeviceEntitys();
     TrafficWeatherDTO trafficWeatherDTO = getTrafficWeatherDTO();
 
-    String responseData = "{\"weather\":[{\"main\":\"1\",\"description\":\"1\"}]," +
+    String responseData = "{\"weather\":[{\"main\":\"Clear\",\"description\":\"clear sky\"}]," +
             "\"main\":{\"temp\":1.0,\"feels_like\":1.0,\"temp_min\":1.0,\"temp_max\":1.0,\"pressure\":1,\"humidity\":1}," +
-            "\"visibility\":1,\"wind\":{\"speed\":1.0,\"deg\":1},\"name\":\"1\"}";
+            "\"visibility\":1,\"wind\":{\"speed\":1.0,\"deg\":1.0, \"gust\":1.0},\"name\":\"" + CITY_NAME + "\"}";
 
     @Test
     void trafficDevicesFoundTest() {
         Mockito.when(repo.findAll()).thenReturn(trafficDeviceEntities);
-        ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
-        Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
-        List<TrafficDeviceDTO> data = localHostRestTemplate.exchange(host + port, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody();
+        Mockito.when(restTemplate.getForEntity(api, String.class))
+                .thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
+        List<TrafficDeviceDTO> data = getTrafficDeviceDTOs();
         assertEquals(data, trafficDeviceDtos);
-        data = localHostRestTemplate.exchange(host + port, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<TrafficDeviceDTO>>() {}).getBody();
         assertEquals(data, trafficDeviceDtos);
     }
 
@@ -101,8 +102,8 @@ public class TrafficWeatherTest {
         TrafficDeviceDTO trafficDeviceDTO = new TrafficDeviceDTO(
                 "1",
                 1L,
-                1.,
-                1.,
+                LON,
+                LAT,
                 1,
                 false,
                 false
@@ -110,7 +111,7 @@ public class TrafficWeatherTest {
         return new TrafficWeatherDTO(trafficDeviceDTO, weatherDTO);
     }
 
-    private List<TrafficDeviceDTO> getTrafficDeviceEntitys() {
+    private List<TrafficDeviceDTO> getTrafficDeviceDTOs() {
         return Collections.singletonList(new TrafficDeviceDTO(
                 "1",
                 1L,
@@ -122,13 +123,13 @@ public class TrafficWeatherTest {
         ));
     }
 
-    private List<TrafficDeviceEntity> getTrafficWeatherDTOs() {
+    private List<TrafficDeviceEntity> getTrafficDeviceEntitys() {
         return Collections.singletonList(new TrafficDeviceEntity(
                 1L,
                 "1",
                 1L,
-                1.,
-                1.,
+                LON,
+                LAT,
                 1,
                 false,
                 false
