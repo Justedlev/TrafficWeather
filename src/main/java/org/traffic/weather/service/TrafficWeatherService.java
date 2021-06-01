@@ -52,7 +52,7 @@ public class TrafficWeatherService implements ITrafficWeather {
             log.debug("no data received from db");
             return Optional.empty();
         }
-        log.debug("getting data from db, data = {}", trafficDevice);
+        log.debug("getting data from db, data = {}", trafficDevice.get());
         return getTrafficWeather(trafficDevice.get());
     }
 
