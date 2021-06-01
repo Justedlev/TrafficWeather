@@ -23,6 +23,7 @@ import org.traffic.weather.domain.entities.TrafficDeviceEntity;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -88,7 +89,7 @@ public class TrafficWeatherTest {
 
     @Test
     void trafficWeatherFoundTest() {
-        Mockito.when(repo.findById("1")).thenReturn(trafficDeviceEntities.get(0));
+        Mockito.when(repo.findById("1")).thenReturn(Optional.of(trafficDeviceEntities.get(0)));
         ResponseEntity<String> entity = restTemplate.getForEntity(api, String.class);
         Mockito.when(entity).thenReturn(new ResponseEntity<>(responseData, HttpStatus.OK));
         TrafficWeatherDTO data = localHostRestTemplate.getForEntity(host + port + "?trafficId=1",

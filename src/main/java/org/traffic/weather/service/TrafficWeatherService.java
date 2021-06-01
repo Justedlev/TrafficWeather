@@ -10,8 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.traffic.weather.api.ApiConstants;
-import org.traffic.weather.api.CodeWithReturnedData;
-import org.traffic.weather.api.Codes;
 import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficDeviceDTO;
 import org.traffic.weather.api.dto.traffic_device_weather_dto.TrafficWeatherDTO;
 import org.traffic.weather.api.dto.weather_dto.WeatherDTO;
@@ -21,10 +19,11 @@ import org.traffic.weather.service.interfaces.ITrafficWeather;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@Qualifier("service1")
+@Qualifier("main-service")
 @Slf4j
 public class TrafficWeatherService implements ITrafficWeather {
 
@@ -47,31 +46,31 @@ public class TrafficWeatherService implements ITrafficWeather {
     }
 
     @Override
-    public CodeWithReturnedData<TrafficWeatherDTO> canBeRepaired(String id) {
-        TrafficDeviceEntity trafficDevice = repository.findById(id);
-        if (trafficDevice == null) {
+    public Optional<TrafficWeatherDTO> canBeRepaired(String id) {
+        Optional<TrafficDeviceEntity> trafficDevice = repository.findById(id);
+        if (!trafficDevice.isPresent()) {
             log.debug("no data received from db");
-            return new CodeWithReturnedData<>(Codes.TRAFFIC_DEVICE_NOT_FOUND, null);
+            return Optional.empty();
         }
         log.debug("getting data from db, data = {}", trafficDevice);
-        return getTrafficWeather(trafficDevice);
+        return getTrafficWeather(trafficDevice.get());
     }
 
-    private CodeWithReturnedData<TrafficWeatherDTO> getTrafficWeather(TrafficDeviceEntity trafficDeviceEntity) {
+    private Optional<TrafficWeatherDTO> getTrafficWeather(TrafficDeviceEntity trafficDeviceEntity) {
         URI api = getWeatherApiURI(trafficDeviceEntity.getDeviceLongitude(), trafficDeviceEntity.getDeviceLatitude());
         ResponseEntity<String> response = restTemplate.getForEntity(api, String.class);
         log.debug("getting data from weather api = {}, data = {}", api, response.getBody());
-        TrafficDeviceDTO trafficDevice = convertTrafficDeviceEntityToTrafficDeviceDTO(trafficDeviceEntity);
         WeatherDTO weatherData;
         try {
             weatherData = mapper.readValue(response.getBody(), WeatherDTO.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             log.debug("conversion data from weather api '{}' error", api);
-            return new CodeWithReturnedData<>(Codes.OK, new TrafficWeatherDTO(trafficDevice, null));
+            return Optional.empty();
         }
+        TrafficDeviceDTO trafficDevice = convertTrafficDeviceEntityToTrafficDeviceDTO(trafficDeviceEntity);
         TrafficWeatherDTO trafficWeatherDTO = new TrafficWeatherDTO(trafficDevice, weatherData);
-        return new CodeWithReturnedData<>(Codes.OK, trafficWeatherDTO);
+        return Optional.of(trafficWeatherDTO);
     }
 
     private URI getWeatherApiURI(double longitude, double latitude) {
