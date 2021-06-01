@@ -6,6 +6,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
+@ToString
 @EqualsAndHashCode
 public class TrafficDeviceDTO {
 
